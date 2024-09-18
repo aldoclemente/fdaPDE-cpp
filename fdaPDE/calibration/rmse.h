@@ -34,11 +34,11 @@ class RMSE {
     RegressionView<void> model_;
    public:
     RMSE() = default;
-    template <typename ModelType> RMSE(const ModelType& model) : model_(model) {};
+    template <typename ModelType> RMSE(const ModelType& model) : model_(model) {}
     template <typename ModelType> void set_model(const ModelType& model) { model_ = model; }
 
     double operator()(
-      const DVector<double>& lambda, const BinaryVector<fdapde::Dynamic>& train_mask,
+      const DVector<double>& lambda, //const BinaryVector<fdapde::Dynamic>& train_mask, // compiler complains
       const BinaryVector<fdapde::Dynamic>& test_mask) {
         model_.set_lambda(lambda);
         // fit model on train set
