@@ -38,8 +38,9 @@ class RMSE {
     template <typename ModelType> void set_model(const ModelType& model) { model_ = model; }
 
     double operator()(
-      const DVector<double>& lambda, //const BinaryVector<fdapde::Dynamic>& train_mask, // compiler complains
+      const DVector<double>& lambda, const BinaryVector<fdapde::Dynamic>& train_mask, 
       const BinaryVector<fdapde::Dynamic>& test_mask) {
+      	auto dummy = train_mask; // compiler complains [-Werror=unused-parameter]
         model_.set_lambda(lambda);
         // fit model on train set
         model_.set_mask(test_mask);   // discard test set from training phase
