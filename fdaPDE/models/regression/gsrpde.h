@@ -105,7 +105,7 @@ class GSRPDE : public RegressionBase<GSRPDE<RegularizationType_>, Regularization
     double norm(const DMatrix<double>& op1, const DMatrix<double>& op2) const {   // total deviance \sum dev(\hat y - y)
         DMatrix<double> mu = distr_.inv_link(op1);
         double result = 0;
-        for (std::size_t i = 0; i < n_locs(); ++i) {
+        for (int i = 0; i < n_locs(); ++i) {
             if (!Base::masked_obs()[i]) result += distr_.deviance(mu.coeff(i, 0), op2.coeff(i, 0));
         }
         return result;
