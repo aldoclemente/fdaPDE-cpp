@@ -4,13 +4,12 @@
 #include <random>
 #include <cmath>
 #include <cstddef>
-#include <gtest/gtest.h>   // testing framework
 #include <fstream>
 #include <sstream>
 #include <chrono> 
 #include <filesystem>
 #include <limits>
-
+#include <Eigen/Dense>
 
 #include <fdaPDE/core.h>
 using fdapde::core::advection;
@@ -37,6 +36,10 @@ using fdapde::models::StochasticEDF;
 using fdapde::models::Sampling;
 #include "fdaPDE/calibration/gcv.h"
 
+#include "../../fdaPDE/calibration/kfold_cv.h"
+#include "../../fdaPDE/calibration/rmse.h"
+using fdapde::calibration::KCV;
+using fdapde::calibration::RMSE;
 
 #include <fdaPDE/geometry.h>
 #include "fdaPDE/utils/IO/csv_reader.h"

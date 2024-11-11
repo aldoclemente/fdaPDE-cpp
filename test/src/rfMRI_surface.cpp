@@ -163,6 +163,7 @@ template <int LocalDim, int EmbedDim> Triangulation<LocalDim, EmbedDim> read_mes
     return Triangulation<LocalDim, EmbedDim>(nodes, cells, boundary);
 }
 
+
 TEST(resting_state_surface_fMRI, read_mesh){
     
     std::string meshID = "brain_lh_surface_32k";
@@ -173,6 +174,24 @@ TEST(resting_state_surface_fMRI, read_mesh){
     EXPECT_TRUE(1);
 }
 
+TEST(resting_state_surface_fMRI, read_slice_mesh){
+    
+    std::string meshID = "brain_lh_sagittal_slice";
+    MeshLoader<Triangulation<2, 2>> domain(meshID);
+
+    std::cout << domain.mesh.nodes().rows() << " " << domain.mesh.nodes().cols() << std::endl;
+    
+    auto L = -laplacian<FEM>();
+    DMatrix<double> u = DMatrix<double>::Zero(domain.mesh.n_cells() * 3, 1);
+    PDE<decltype(domain.mesh), decltype(L), DMatrix<double>, FEM, fem_order<1>> problem(domain.mesh, L, u);
+
+    eigen2txt<double>(problem.quadrature_nodes(), "../data/mesh/brain_lh_sagittal_slice/quadrature_nodes.txt");
+    EXPECT_TRUE(1);
+}
+
+
+
+/*
 TEST(resting_state_surface_fMRI, read_subjectsIDs_NA_mask){
     std::string meshID = "brain_lh_surface_32k";
     MeshLoader<Triangulation<2, 3>> domain(meshID);
@@ -186,16 +205,18 @@ TEST(resting_state_surface_fMRI, read_subjectsIDs_NA_mask){
     
     EXPECT_TRUE(1);
 }
+*/
 
-
+/*
 TEST(resting_state_surface_fMRI, one_subject){
 
     auto start = std::chrono::high_resolution_clock::now();
 
 	std::string meshID = "../data/mesh/brain_lh_surface_32k";
+    //std::string meshID = "../script/data/rfMRI_surface/norm_mesh";
 	Triangulation<2, 3> surface = read_mesh<2, 3>(meshID);
 	std::cout << surface.nodes().rows() << " " << surface.nodes().cols() << std::endl;
-	
+
 	std::string response_dir = "../script/data/rfMRI_surface/FCmaps/";
 	std::string cov_dir = "../script/data/rfMRI_surface/thickness/";
 	std::string response_tail = ".fc_map_NA.csv";
@@ -225,33 +246,34 @@ TEST(resting_state_surface_fMRI, one_subject){
     std::cout << "area: " << area << std::endl; 
     
     
-    std::size_t seed = 314156;
-    std::cout << "\t --- GCV ---" << std::endl;
-    int n_lambdas = 50;
-    DMatrix<double> lambdas(n_lambdas, 1);
-    for (int i = 0; i < n_lambdas; ++i) { lambdas(i, 0) =  std::pow(10, -10.0 + 0.20 * i) / area; }
+    // std::size_t seed = 314156;
+    // std::cout << "\t --- GCV ---" << std::endl;
+    // int n_lambdas = 5;
+    // DMatrix<double> lambdas(n_lambdas, 1);
+    // for (int i = 0; i < n_lambdas; ++i) { lambdas(i, 0) =  std::pow(10, -6.0 + 0.20 * i); }
+    // std::cout <<"lambdas: " << "\n" << lambdas << "\n" << std::endl;
     
-    // define GCV function and grid of \lambda_D values
-    auto GCV = model.gcv<StochasticEDF>(100, seed);
-    // optimize GCV
+    // // define GCV function and grid of \lambda_D values
+    // auto GCV = model.gcv<StochasticEDF>(100, seed);
+    // // optimize GCV
     
-    fdapde::core::Grid<fdapde::Dynamic> opt;
-    opt.optimize(GCV, lambdas);
-	std::cout <<"lambda opt:" << opt.optimum() << "\n" << std::endl;
+    // fdapde::core::Grid<fdapde::Dynamic> opt;
+    // opt.optimize(GCV, lambdas);
+	// std::cout <<"lambda opt:" << opt.optimum() << "\n" << std::endl;
 
-    std::cout <<"gcvs: " << "\n" << std::endl;
-    for(std::size_t i = 0; i < GCV.gcvs().size(); ++i)
-        std::cout << GCV.gcvs()[i] << std::endl;
+    // std::cout <<"gcvs: " << "\n" << std::endl;
+    // for(std::size_t i = 0; i < GCV.gcvs().size(); ++i)
+    //     std::cout << GCV.gcvs()[i] << std::endl;
     
-    std::cout <<"edfs (q+trS): \n" << std::endl;
-    for(std::size_t i = 0; i < GCV.edfs().size(); ++i)
-        std::cout<< GCV.edfs()[i] << std::endl;
-
+    // std::cout <<"edfs (q+trS): \n" << std::endl;
+    // for(std::size_t i = 0; i < GCV.edfs().size(); ++i)
+    //     std::cout<< GCV.edfs()[i] << std::endl;
+    
     std::cout << "\t --- KCV ---" << std::endl;
     
-    int n_lambdas_kcv = 20;
+    int n_lambdas_kcv = 50;
     DMatrix<double> lambdas_kcv(n_lambdas_kcv, 1);
-    for (int i = 0; i < n_lambdas_kcv; ++i) { lambdas_kcv(i, 0) =  std::pow(10, 0 + 0.025 * i); }
+    for (int i = 0; i < n_lambdas_kcv; ++i) { lambdas_kcv(i, 0) =  std::pow(10, -2 + 0.125 * i); }
     std::cout <<"lambdas: " << "\n" << lambdas_kcv << "\n" << std::endl;
     
     int n_folds = 10;
@@ -270,3 +292,56 @@ TEST(resting_state_surface_fMRI, one_subject){
 	
     EXPECT_TRUE(1);
 }
+*/
+
+/*
+TEST(gcv_srpde_test, laplacian_nonparametric_samplingatnodes_spaceonly_gridstochastic) {
+    // define domain
+    MeshLoader<Triangulation<2, 2>> domain("unit_square_coarse");
+    // import data from files
+    DMatrix<double> y = read_csv<double>("../data/models/gcv/2D_test2/y.csv");
+    // define regularizing PDE
+    auto L = -laplacian<FEM>();
+    DMatrix<double> u = DMatrix<double>::Zero(domain.mesh.n_cells() * 3, 1);
+    PDE<decltype(domain.mesh), decltype(L), DMatrix<double>, FEM, fem_order<1>> problem(domain.mesh, L, u);
+    // define model
+    SRPDE model(problem, Sampling::mesh_nodes);
+    // set model's data
+    BlockFrame<double, int> df;
+    df.insert(OBSERVATIONS_BLK, y);
+    model.set_data(df);
+    model.init();
+
+    double area = ( model.R0() * DMatrix<double>::Ones(domain.mesh.nodes().rows(), 1)).sum();
+    std::cout << "area: " << area << std::endl; 
+    // define GCV function and grid of \lambda_D values
+    std::size_t seed = 476813;
+    auto GCV = model.gcv<StochasticEDF>(100, seed);
+    DMatrix<double> lambdas(13, 1);
+    for (int i = 0; i < 13; ++i) { lambdas(i, 0) = std::pow(10, -6.0 + 0.25 * i); }
+    //for (int i = 0; i < 13; ++i) { lambdas(i, 0) = std::pow(10, -10.0 + 0.25 * i); }
+    // optimize GCV
+    fdapde::core::Grid<fdapde::Dynamic> opt;
+    opt.optimize(GCV, lambdas);
+    // test correctness
+    EXPECT_TRUE(almost_equal(GCV.edfs(), "../data/models/gcv/2D_test2/edfs.mtx"));
+    EXPECT_TRUE(almost_equal(GCV.gcvs(), "../data/models/gcv/2D_test2/gcvs.mtx"));
+
+
+    std::cout << "lambdas: \n" << lambdas << "\n" << std::endl;
+    std::cout << "lambda opt: " << opt.optimum() << std::endl;
+
+    std::cout <<"gcvs: " << "\n" << std::endl;
+    for(std::size_t i = 0; i < GCV.gcvs().size(); ++i)
+        std::cout << GCV.gcvs()[i] << std::endl;
+    
+    std::cout <<"edfs (q+trS): \n" << std::endl;
+    for(std::size_t i = 0; i < GCV.edfs().size(); ++i)
+        std::cout<< GCV.edfs()[i] << std::endl;
+
+    // check consistency with GCV calibrator
+    auto GCV_ = fdapde::calibration::GCV<SpaceOnly> {fdapde::core::Grid<fdapde::Dynamic> {}, StochasticEDF(100, seed)}(lambdas);
+    
+    EXPECT_TRUE(GCV_.fit(model) == opt.optimum());
+}
+*/

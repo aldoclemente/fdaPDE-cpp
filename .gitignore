@@ -13,3 +13,5 @@ test/build/
 test/CMakeFiles/
 test/_deps/
 test/libs/
+test/lib/
+test/script/data/rfMRI_surface/imgs/
