@@ -34,22 +34,32 @@ template <typename Model_> class PowerIteration {
    private:
     using Model = typename std::decay<Model_>::type;
     using SolverType = typename std::conditional<
-      is_space_only<Model>::value, SRPDE, STRPDE<typename Model::RegularizationType, fdapde::monolithic>>::type;
+      is_space_only<Model>::value, SRPDE, STRPDE<typename Model::RegularizationType, fdapde::iterative>>::type;
     static constexpr int n_lambda = Model::n_lambda;
     Model* m_;
     GCV gcv_;   // GCV functor
     // algorithm's parameters
+<<<<<<< Updated upstream
     double tolerance_ = 1e-6;     // treshold on |Jnew - Jold| used as stopping criterion
     std::size_t max_iter_ = 20;   // maximum number of iterations before forced stop
     std::size_t k_ = 0;           // iteration index
     SolverType solver_;           // internal solver
     int seed_;
+=======
+    double tolerance_ = 1e-6;   // treshold on |Jnew - Jold| used as stopping criterion
+  int max_iter_ = 20;         // maximum number of iterations before forced stop
+    int k_ = 0;                 // iteration index
+    SolverType solver_;         // internal solver
+    int seed_ = fdapde::random_seed;
+    int n_mc_samples_ = 100;
+>>>>>>> Stashed changes
 
     DVector<double> s_;    // estimated score vector
     DVector<double> fn_;   // field evaluation at data location (\Psi*f)
     DVector<double> f_;    // field basis expansion at convergence
     DVector<double> g_;    // PDE misfit at convergence
     double f_norm_;        // L^2 norm of estimated field at converegence
+<<<<<<< Updated upstream
     double fn_norm_;       // euclidean norm of field evaluation at data locations
    public:
     // constructors
@@ -81,6 +91,36 @@ template <typename Model_> class PowerIteration {
     }
 
     // executes the power itration algorithm on data X and smoothing parameter \lambda, starting from f0
+=======
+
+	BlockFrame<double, int> ciccio;
+
+  
+   public:
+    // constructors
+    PowerIteration() = default;
+    PowerIteration(const Model& m, double tolerance, int max_iter, int seed) :
+        tolerance_(tolerance), max_iter_(max_iter),
+        seed_((seed == fdapde::random_seed) ? std::random_device()() : seed) {
+        // initialize internal smoothing solver
+        if constexpr (is_space_only<SolverType>::value) { solver_ = SolverType(m.pde(), m.sampling()); }
+        else {
+            solver_ = SolverType(m.pde(), m.time_pde(), m.sampling());
+            solver_.set_temporal_locations(m.time_locs());
+        }
+        solver_.set_spatial_locations(m.locs());
+
+	solver_.set_data(ciccio); // !!!!!!!!!! remove!!!
+
+	return;
+    };
+    template <typename ModelType>
+    PowerIteration(const ModelType& m, double tolerance, int max_iter) :
+        PowerIteration(m, tolerance, max_iter, fdapde::random_seed) { }
+
+  void init() { /*gcv_ = solver_.template gcv<StochasticEDF>(n_mc_samples_, seed_);*/ } // disabled due to iterative approach to STRPDE
+    // executes the power iteration algorithm on data X and smoothing parameter \lambda, starting from f0
+>>>>>>> Stashed changes
     void compute(const DMatrix<double>& X, const SVector<n_lambda>& lambda, const DVector<double>& f0) {
         // initialization
         fn_.resize(X.cols()); s_.resize(X.rows());
@@ -91,7 +131,12 @@ template <typename Model_> class PowerIteration {
         double Jnew = 1;
         fn_ = f0;   // set starting point
         while (!almost_equal(Jnew, Jold, tolerance_) && k_ < max_iter_) {
+<<<<<<< Updated upstream
             // compute score vector s as \frac{X*fn}{\norm(X*fn)}
+=======
+	  std::cout << "power iteration: " << k_ << "/" << max_iter_ << std::endl;
+            // s = \frac{X*fn}{\norm(X*fn)}
+>>>>>>> Stashed changes
             s_ = X * fn_;
             s_ = s_ / s_.norm();
             // compute loadings by solving a proper smoothing problem
@@ -105,6 +150,7 @@ template <typename Model_> class PowerIteration {
             Jnew = (X - s_ * fn_.transpose()).squaredNorm() + solver_.ftPf(lambda);
         }
         // store results
+<<<<<<< Updated upstream
         f_ = solver_.f();                                 // estimated field at convergence
         g_ = solver_.g();                                 // PDE misfit at convergence
         f_norm_ = std::sqrt(f_.dot(solver_.R0() * f_));   // L^2 norm of estimated field
@@ -117,6 +163,13 @@ template <typename Model_> class PowerIteration {
             fn_norm_ = fn_.norm();
 	
 	return;
+=======
+        f_norm_ = std::sqrt(solver_.ftR0f());   // L^2 norm of estimated field
+        f_ = solver_.f() / f_norm_;                                         // estimated field (L^2 normalized)
+        g_ = solver_.g();                                                   // PDE misfit at convergence
+        fn_ = /*solver_.Psi(not_nan()) **/ f_;   // evaluation of (L^2 unitary norm) estimated field at data locations
+        return;
+>>>>>>> Stashed changes
     }
 
     // getters

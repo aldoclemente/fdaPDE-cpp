@@ -88,7 +88,7 @@ class SpaceTimeSeparableBase : public SpaceTimeBase<Model, SpaceTimeSeparable> {
     const pde_ptr& time_pde() const { return time_pde_; }
     const pde_ptr& pde() const { return space_pde_; }
     // return stacked version of discretized forcing field
-    const DVector<double>& u() {
+    const DVector<double>& u() const {
         if (is_empty(u_)) {   // compute once and cache
             std::size_t N = n_spatial_basis();
             u_.resize(n_basis());
@@ -115,6 +115,21 @@ class SpaceTimeSeparableBase : public SpaceTimeBase<Model, SpaceTimeSeparable> {
 
     // destructor
     virtual ~SpaceTimeSeparableBase() = default;
+<<<<<<< Updated upstream
+=======
+   protected:
+    PDE space_pde_ {};   // regularizing term in space Lf - u
+    PDE time_pde_ {};    // regularizing term in time
+    // let \phi_i the i-th basis function in time
+    SpMatrix<double> Phi_;          // [Phi_]_{ij} = \phi_i(t_j)
+    mutable DVector<double> u_;     // stacked discretized forcing [u_1 \ldots u_n, \ldots, u_1 \ldots u_n]
+    SpMatrix<double> R0_;           // P0 \kron R0 (R0: mass matrix in space)
+    SpMatrix<double> R1_;           // P0 \kron R1 (R1: stiff matrix in space)
+    DVector<double> time_locs_;     // time instants t_1, ..., t_m
+    mutable SpMatrix<double> PD_;   // discretization of space regularization: (R1^T*R0^{-1}*R1) \kron P0
+    mutable SpMatrix<double> PT_;   // discretization of time regularization:  (R0 \kron P1)
+    mutable fdapde::SparseLU<SpMatrix<double>> invR0_;
+>>>>>>> Stashed changes
 };
 
 }   // namespace models

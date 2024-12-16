@@ -78,18 +78,40 @@ template <typename E> struct MeshLoader {
         std::string neighbors_file = MESH_PATH + meshID + "/neigh.csv";
         std::string boundary_file = MESH_PATH + meshID + "/boundary.csv";
 
-	points_ = double_reader.parse_file<Eigen::Dense>(points_file);
-        // realign indexes to 0, if requested
-        elements_ = (int_reader.parse_file<Eigen::Dense>(elements_file).array() - 1).matrix();
-        edges_ = (int_reader.parse_file<Eigen::Dense>(edges_file).array() > 0)
-	    .select(int_reader.parse_file<Eigen::Dense>(edges_file).array()-1, -1).matrix();
-        boundary_ = int_reader.parse_file<Eigen::Dense>(boundary_file);
-	if constexpr (!is_network<M, N>::value)
-	    neighbors_ = (int_reader.parse_file<Eigen::Dense>(neighbors_file).array() > 0)
-	      .select(int_reader.parse_file<Eigen::Dense>(neighbors_file).array()-1, -1).matrix();
-        else {
-            neighbors_ = int_reader.parse_file<Eigen::Sparse>(neighbors_file);
-        }
+// <<<<<<< Updated upstream
+// 	points_ = double_reader.parse_file<Eigen::Dense>(points_file);
+//         // realign indexes to 0, if requested
+//         elements_ = (int_reader.parse_file<Eigen::Dense>(elements_file).array() - 1).matrix();
+//         edges_ = (int_reader.parse_file<Eigen::Dense>(edges_file).array() > 0)
+// 	    .select(int_reader.parse_file<Eigen::Dense>(edges_file).array()-1, -1).matrix();
+//         boundary_ = int_reader.parse_file<Eigen::Dense>(boundary_file);
+// 	if constexpr (!is_network<M, N>::value)
+// 	    neighbors_ = (int_reader.parse_file<Eigen::Dense>(neighbors_file).array() > 0)
+// 	      .select(int_reader.parse_file<Eigen::Dense>(neighbors_file).array()-1, -1).matrix();
+//         else {
+//             neighbors_ = int_reader.parse_file<Eigen::Sparse>(neighbors_file);
+//         }
+// =======
+//         points_ = double_reader.parse_file<Eigen::Dense>(points_file);
+// 	int n_points = points_.rows();
+// 	DMatrix<double> tmp = points_.bottomRows(n_points - 1);
+// 	points_ = tmp;
+//         // realign indexes to 0, if requested
+//         elements_ = (int_reader.parse_file<Eigen::Dense>(elements_file).array() - 1).matrix();
+// 	elements_ = elements_.bottomRows(elements_.rows() - 1);
+//         // edges_ = (int_reader.parse_file<Eigen::Dense>(edges_file).array() > 0)
+//         //            .select(int_reader.parse_file<Eigen::Dense>(edges_file).array() - 1, -1)
+//         //            .matrix();
+// 	std::cout << elements_.topRows(10) << std::endl;
+//         boundary_ = int_reader.parse_file<Eigen::Dense>(boundary_file);
+// 	boundary_ = boundary_.bottomRows(boundary_.rows() - 1);
+// 	std::cout << boundary_.topRows(10) << std::endl;
+//         // if constexpr (!core::is_network<M, N>::value)
+//         //     neighbors_ = (int_reader.parse_file<Eigen::Dense>(neighbors_file).array() > 0)
+//         //                    .select(int_reader.parse_file<Eigen::Dense>(neighbors_file).array() - 1, -1)
+//         //                    .matrix();
+//         // else { neighbors_ = int_reader.parse_file<Eigen::Sparse>(neighbors_file); }
+// >>>>>>> Stashed changes
         // initialize mesh
 	mesh = E(points_, elements_, boundary_);
     }

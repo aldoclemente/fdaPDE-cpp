@@ -39,19 +39,47 @@ template <typename Model> class ModelBase {
     ModelBase() = default;
     // full model stack initialization
     void init() {
+        std::cout << "init regularization_" << std::endl;
         if (model().runtime().query(runtime_status::require_penalty_init)) { model().init_regularization(); }
+	// std::this_thread::sleep_for(std::chrono::seconds(5));
+	std::cout << "sampling_" << std::endl;
         if (model().runtime().query(runtime_status::require_functional_basis_evaluation)) {
             model().init_sampling(true);   // init \Psi matrix, always force recomputation
         }
+<<<<<<< Updated upstream
 	model().analyze_data();    // specific data-dependent initialization requested by the model
+=======
+	// std::this_thread::sleep_for(std::chrono::seconds(5));
+	std::cout << "analyze data_" << std::endl;
+	model().analyze_data();    // specific data-dependent initialization requested by Model
+	// std::this_thread::sleep_for(std::chrono::seconds(5));
+	std::cout << "correct psi_" << std::endl;
+>>>>>>> Stashed changes
 	if (model().runtime().query(runtime_status::require_psi_correction)) { model().correct_psi(); }
+	// std::this_thread::sleep_for(std::chrono::seconds(5));
+	std::cout << "init model" << std::endl;
         model().init_model();
 	// clear all dirty bits in blockframe
 	for(const auto& BLK : df_.dirty_cols()) df_.clear_dirty_bit(BLK);
     }
   
     // setters
-    void set_data(const BlockFrame<double, int>& df, bool reindex = false) {
+
+  // do one for move semantic and one for non-const lvalue ref. remove this below
+  // template<typename DataType>
+  // void set_data(DataType&& df, bool reindex = false) { 
+  //       df_ = &df;
+  //       // insert an index row (if not yet present or requested)
+  //       if (!df_->has_block(INDEXES_BLK) || reindex) {
+  //           int n = df_->rows();
+  //           DMatrix<int> idx(n, 1);
+  //           for (int i = 0; i < n; ++i) idx(i, 0) = i;
+  //           df_->insert(INDEXES_BLK, idx);
+  //       }
+  // 	model().runtime().set(runtime_status::require_data_stack_update);
+  //   }
+
+  void set_data(const BlockFrame<double, int>& df, bool reindex = false) {
         df_ = df;
         // insert an index row (if not yet present or requested)
         if (!df_.has_block(INDEXES_BLK) || reindex) {
@@ -62,23 +90,41 @@ template <typename Model> class ModelBase {
         }
 	model().runtime().set(runtime_status::require_data_stack_update);
     }
+  
     void set_lambda(const DVector<double>& lambda) {   // dynamic sized version of set_lambda provided by upper layers
 	model().set_lambda_D(lambda[0]);
 	if constexpr(is_space_time<Model>::value) model().set_lambda_T(lambda[1]);
     }
     // getters
+    // const BlockFrame<double, int>& data() const { return *df_; }
+    // BlockFrame<double, int>& data() { return *df_; }   // direct write-access to model's internal data storage
+    // const DMatrix<int>& idx() const { return df_->get<int>(INDEXES_BLK); }   // data indices
+
     const BlockFrame<double, int>& data() const { return df_; }
     BlockFrame<double, int>& data() { return df_; }   // direct write-access to model's internal data storage
     const DMatrix<int>& idx() const { return df_.get<int>(INDEXES_BLK); }   // data indices
+<<<<<<< Updated upstream
     std::size_t n_locs() const { return model().n_spatial_locs() * model().n_temporal_locs(); }
     DVector<double> lambda(int) const { return model().lambda(); }   // int supposed to be fdapde::Dynamic
+=======
+
+  
+    int n_locs() const { return model().n_spatial_locs() * model().n_temporal_locs(); }
+    DVector<double> lambda(int) const {   // int supposed to be fdapde::Dynamic
+        fdapde_assert(!is_empty(model().lambda()));
+        return model().lambda();
+    }
+>>>>>>> Stashed changes
     // access to model runtime status
     model_runtime_handler& runtime() { return runtime_; }
     const model_runtime_handler& runtime() const { return runtime_; }
 
     virtual ~ModelBase() = default;
    protected:
+  // BlockFrame<double, int>* df_ {};      // blockframe for data storage
+
     BlockFrame<double, int> df_ {};      // blockframe for data storage
+  
     model_runtime_handler runtime_ {};   // model's runtime status
 
     // getter to underlying model object

@@ -84,10 +84,17 @@ namespace testing {
   }
   // utility to import .csv files
   template <typename T>
-  DMatrix<T> read_csv(const std::string& file_name) {
-    CSVReader<T> reader {};
-    return reader.template parse_file<Eigen::Dense>(file_name);
+  DMatrix<T> read_csv(const std::string& file_name, bool header = true) {
+    core::CSVReader<T> reader {};
+    return reader.template parse_file<Eigen::Dense>(file_name, header);
   }
+
+  // template <typename T>
+  // DMatrix<T> read_csv(const std::string& file_name) {
+  //   CSVReader<T> reader {};
+  //   return reader.template parse_file<Eigen::Dense>(file_name);
+  // }
+
   
 }}
 

@@ -39,8 +39,25 @@ template <typename RegularizationType, typename SolutionPolicy> class FPCA;
 // Lila, E., Aston, J.A.D., Sangalli, L.M. (2016), Smooth Principal Component Analysis over two-dimensional manifolds
 // with an application to Neuroimaging, Annals of Applied Statistics, 10 (4), 1854-1879.
 template <typename RegularizationType_>
+<<<<<<< Updated upstream
 class FPCA<RegularizationType_, sequential> :
     public FunctionalBase<FPCA<RegularizationType_, sequential>, RegularizationType_> {
+=======
+class FPCA : public FunctionalBase<FPCA<RegularizationType_>, RegularizationType_> {
+   private:
+    int n_pc_ = 3;           // number of principal components
+    struct SolverType__ {    // type erased solver strategy
+        using This_ = FPCA<RegularizationType_>;
+        template <typename T> using fn_ptrs = mem_fn_ptrs<&T::template compute<This_>, &T::loadings, &T::scores>;
+        void compute(const DMatrix<double>& X, This_& model, int rank) {
+            invoke<void, 0>(*this, X, model, rank);
+        }
+        decltype(auto) loadings() const { return invoke<const DMatrix<double>&, 1>(*this); }
+        decltype(auto) scores()   const { return invoke<const DMatrix<double>&, 2>(*this); }
+    };
+    using SolverType = fdapde::erase<heap_storage, SolverType__>;
+    SolverType solver_;   // RegularizedSVD solver
+>>>>>>> Stashed changes
    public:
     using RegularizationType = std::decay_t<RegularizationType_>;
     using This = FPCA<RegularizationType, sequential>;
@@ -115,6 +132,23 @@ class FPCA<RegularizationType_, sequential> :
         return;
     }
 
+<<<<<<< Updated upstream
+=======
+    void init_model() { fdapde_assert(bool(solver_) == true); };
+
+  void init_sampling([[maybe_unused]] bool) { return; }
+  void init_regularization() { // only for iterative approach!!
+    return;
+    // Base::space_pde_.init();   // initialize penalty in space
+
+    // Base::time_pde_.init();    // initialize penalty in time
+
+    // compute \Phi matrix [\Phi]_{ij} = \phi_i(t_j)
+    // DVector<double> time_locs = is_empty(time_locs_) ? time_ : time_locs_;
+  }
+  
+    void solve() { solver_.compute(X(), *this, n_pc_); }
+>>>>>>> Stashed changes
     // getters
     const DMatrix<double>& loadings() const { return loadings_; }
     const DMatrix<double>& scores() const { return scores_; }

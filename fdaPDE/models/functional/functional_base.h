@@ -36,7 +36,7 @@ template <typename Model, typename RegularizationType>
 class FunctionalBase : public select_regularization_base<Model, RegularizationType>::type, public SamplingBase<Model> {
    public:
     using Base = typename select_regularization_base<Model, RegularizationType>::type;
-    using Base::df_;                    // BlockFrame for problem's data storage
+    using Base::data;                   // BlockFrame for problem's data storage
     using SamplingBase<Model>::Psi;     // matrix of basis evaluations at locations p_1 ... p_n
     using SamplingBase<Model>::PsiTD;   // block \Psi^T*D
 
@@ -53,7 +53,7 @@ class FunctionalBase : public select_regularization_base<Model, RegularizationTy
         Base(pde, time), SamplingBase<Model>(s) {};
 
     // getters
-    const DMatrix<double>& X() const { return df_.template get<double>(OBSERVATIONS_BLK); }   // observation matrix X
+    const DMatrix<double>& X() const { return data().template get<double>(OBSERVATIONS_BLK); }   // observation matrix X
     std::size_t n_stat_units() const { return X().rows(); }
     std::size_t n_obs() const { return X().size(); };
     const SpMatrix<double>& Psi() const { return Psi(not_nan()); }

@@ -39,10 +39,10 @@ class RegressionBase :
     public select_regularization_base<Model, RegularizationType>::type,
     public SamplingBase<Model> {
    protected:
-    DiagMatrix<double> W_ {};   // diagonal matrix of weights (implements possible heteroscedasticity)
+    DiagMatrix<double> W_ {};   // diagonal matrix of weights (implements possible heteroskedasticity)
     DMatrix<double> XtWX_ {};   // q x q dense matrix X^\top*W*X
     DMatrix<double> T_ {};      // T = \Psi^\top*Q*\Psi + P (required by GCV)
-    Eigen::PartialPivLU<DMatrix<double>> invXtWX_ {};   // factorization of the dense q x q matrix XtWX_.
+    Eigen::PartialPivLU<DMatrix<double>> invXtWX_ {};   // factorization of the dense q x q matrix XtWX_
     // missing data and masking logic
     BinaryVector<fdapde::Dynamic> nan_mask_;   // indicator function over missing observations
     BinaryVector<fdapde::Dynamic> y_mask_;     // discards i-th observation from the fitting if y_mask_[i] == true
@@ -59,7 +59,7 @@ class RegressionBase :
     DVector<double> beta_ {};   // estimate of the coefficient vector (1 x q vector)
    public:
     using Base = typename select_regularization_base<Model, RegularizationType>::type;
-    using Base::df_;                    // BlockFrame for problem's data storage
+    using Base::data;                   // BlockFrame for problem's data storage
     using Base::idx;                    // indices of observations
     using Base::n_basis;                // number of basis function over domain D
     using Base::P;                      // discretized penalty matrix
@@ -82,11 +82,17 @@ class RegressionBase :
         Base(pde, time), SamplingBase<Model>(s) {};
 
     // getters
+<<<<<<< Updated upstream
     const DMatrix<double>& y() const { return df_.template get<double>(OBSERVATIONS_BLK); }   // observation vector y
     std::size_t q() const {
         return df_.has_block(DESIGN_MATRIX_BLK) ? df_.template get<double>(DESIGN_MATRIX_BLK).cols() : 0;
+=======
+    const DMatrix<double>& y() const { return data().template get<double>(OBSERVATIONS_BLK); }   // observation vector y
+    int q() const {
+        return data().has_block(DESIGN_MATRIX_BLK) ? data().template get<double>(DESIGN_MATRIX_BLK).cols() : 0;
+>>>>>>> Stashed changes
     }
-    const DMatrix<double>& X() const { return df_.template get<double>(DESIGN_MATRIX_BLK); }   // covariates
+    const DMatrix<double>& X() const { return data().template get<double>(DESIGN_MATRIX_BLK); }   // covariates
     const DiagMatrix<double>& W() const { return W_; }                                         // observations' weights
     const DMatrix<double>& XtWX() const { return XtWX_; }
     const Eigen::PartialPivLU<DMatrix<double>>& invXtWX() const { return invXtWX_; }
@@ -104,7 +110,11 @@ class RegressionBase :
 
     // utilities
     bool has_covariates() const { return q() != 0; }                 // true if the model has a parametric part
+<<<<<<< Updated upstream
     bool has_weights() const { return df_.has_block(WEIGHTS_BLK); }  // true if heteroscedastic observation are provided
+=======
+    bool has_weights() const { return data().has_block(WEIGHTS_BLK); }  // true if heteroskedastic observation are provided
+>>>>>>> Stashed changes
     bool has_nan() const { return n_nan_ != 0; }                     // true if there are missing data
 
     // efficient left multiplication by matrix Q = W(I - X*(X^\top*W*X)^{-1}*X^\top*W)
@@ -133,6 +143,10 @@ class RegressionBase :
         }
     }
     double ftPf() const { return ftPf(Base::lambda()); }
+    // evaluation of the term f^\top * R0 * f
+    double ftR0f(const DVector<double>& f) const { return f.dot(R0() * f); }
+    double ftR0f() const { return f().dot(R0() * f()); }
+
     // GCV support
     template <typename EDFStrategy_, typename... Args> GCV gcv(Args&&... args) {
         return GCV(Base::model(), EDFStrategy_(std::forward<Args>(args)...));
@@ -144,27 +158,38 @@ class RegressionBase :
     // data dependent regression models' initialization logic
     void analyze_data() {
         // compute q x q dense matrix X^\top*W*X and its factorization
-        if (has_weights() && df_.is_dirty(WEIGHTS_BLK)) {
-            W_ = df_.template get<double>(WEIGHTS_BLK).col(0).asDiagonal();
+        if (has_weights() && data().is_dirty(WEIGHTS_BLK)) {
+            W_ = data().template get<double>(WEIGHTS_BLK).col(0).asDiagonal();
             model().runtime().set(runtime_status::require_W_update);
         } else if (is_empty(W_)) {
             // default to homoskedastic observations
             W_ = DVector<double>::Ones(Base::n_locs()).asDiagonal();
         }
+<<<<<<< Updated upstream
         // compute q x q dense matrix X^\top*W*X and its factorization if covariates are supplied
         if (has_covariates() && (df_.is_dirty(DESIGN_MATRIX_BLK) || df_.is_dirty(WEIGHTS_BLK))) {
+=======
+        // compute q x q dense matrix X^\top*W*X and its factorization
+        if (has_covariates() && (data().is_dirty(DESIGN_MATRIX_BLK) || data().is_dirty(WEIGHTS_BLK))) {
+>>>>>>> Stashed changes
             XtWX_ = X().transpose() * W_ * X();
             invXtWX_ = XtWX_.partialPivLu();
         }
         // derive missingness pattern from observations vector (if changed)
+<<<<<<< Updated upstream
         if (df_.is_dirty(OBSERVATIONS_BLK)) {
             nan_mask_.resize(y().rows());
             n_nan_ = 0;
             for (std::size_t i = 0; i < df_.template get<double>(OBSERVATIONS_BLK).size(); ++i) {
+=======
+        if (data().is_dirty(OBSERVATIONS_BLK)) {
+            n_nan_ = 0;
+            for (int i = 0; i < data().template get<double>(OBSERVATIONS_BLK).size(); ++i) {
+>>>>>>> Stashed changes
                 if (std::isnan(y()(i, 0))) {   // requires -ffast-math compiler flag to be disabled
                     nan_mask_.set(i);
                     n_nan_++;
-                    df_.template get<double>(OBSERVATIONS_BLK)(i, 0) = 0.0;   // zero out NaN
+                    data().template get<double>(OBSERVATIONS_BLK)(i, 0) = 0.0;   // zero out NaN
                 }
             }
             if (has_nan()) model().runtime().set(runtime_status::require_psi_correction);

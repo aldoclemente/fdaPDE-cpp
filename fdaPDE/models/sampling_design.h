@@ -39,7 +39,6 @@ enum Sampling { mesh_nodes, pointwise, areal };   // supported sampling strategi
 template <typename Model> class SamplingBase {
     Sampling sampling_;
    protected:
-    FDAPDE_DEFINE_MODEL_GETTER;    // import model() method (const and non-const access)
     SpMatrix<double> Psi_;         // n x N matrix \Psi = [\psi_{ij}] = \psi_j(p_i)
     SpMatrix<double> PsiTD_;       // N x n block \Psi^T*D, being D the matrix of subdomain measures
     DiagMatrix<double> D_;         // for areal sampling, diagonal matrix of subdomains' measures, D_ = I_n otherwise
@@ -54,6 +53,8 @@ template <typename Model> class SamplingBase {
             Psi_ = Kronecker(Im, Psi_);
 	}
     }
+    inline const Model& model() const { return static_cast<const Model&>(*this); }
+    inline Model& model() { return static_cast<Model&>(*this); }
    public:
     SamplingBase() = default;
     SamplingBase(Sampling sampling) : sampling_(sampling) { };

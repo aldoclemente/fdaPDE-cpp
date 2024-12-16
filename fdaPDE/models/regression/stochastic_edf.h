@@ -22,7 +22,6 @@
 #include "regression_type_erasure.h"
 
 #include <random>
-using fdapde::core::SMW;
 
 namespace fdapde {
 namespace models {
@@ -78,7 +77,7 @@ class StochasticEDF {
             sol = model_.invA().solve(Bs_);
         } else {
             // solve system (A+UCV)*x = Bs via woodbury decomposition using matrices U and V cached by model_
-            sol = SMW<>().solve(model_.invA(), model_.U(), model_.XtWX(), model_.V(), Bs_);
+            sol = core::SMW<>().solve(model_.invA(), model_.U(), model_.XtWX(), model_.V(), Bs_);
         }
         // compute approximated Tr[S] using monte carlo mean
         double MCmean = 0;
