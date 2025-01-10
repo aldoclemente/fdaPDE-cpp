@@ -17,8 +17,6 @@
 #ifndef __FORMULA_H__
 #define __FORMULA_H__
 
-#include <string>
-
 namespace fdapde {
 
 class Formula {
