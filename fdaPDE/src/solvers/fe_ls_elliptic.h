@@ -372,7 +372,9 @@ struct fe_ls_elliptic {
         } else {
             Bs_->topRows(n_dofs_) = -PsiNA().transpose() * D_ * internals::lmbQ(W_, X_, invXtWX_, *Us_);
         }
-	// enforce Dirichlet BCs, if any
+        // set forcing term, if any
+        Bs_->bottomRows(n_dofs_) = lambda_saved_.value() * u_.replicate(1, r); 
+	    // enforce Dirichlet BCs, if any
         for (size_t i = 0; i < dirichlet_dofs_.size(); ++i) {
             Bs_->row(dirichlet_dofs_[i]).setConstant(dirichlet_vals_[i]);
         }
